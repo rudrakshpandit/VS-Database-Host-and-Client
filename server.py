@@ -5010,7 +5010,7 @@ def get_github_auth_token():
 
 def check_for_system_updates(client_ver=None):
     """Checks whether a new version is available on GitHub."""
-    current_version = client_ver if client_ver else "2.2.4"
+    current_version = client_ver if client_ver else "2.2.5"
     repo = "rudrakshpandit/VS-Database-Host-and-Client"
     try:
         url = f"https://api.github.com/repos/{repo}/releases/latest"
@@ -8113,6 +8113,7 @@ class Handler(BaseHTTPRequestHandler):
                 app_root / dot_fname,
                 app_root / "src-tauri" / "target" / "release" / "bundle" / "nsis" / fname,
                 app_root / "src-tauri" / "target" / "release" / "bundle" / "nsis" / dot_fname,
+                app_root / "src-tauri" / "target" / "release" / "bundle" / "nsis" / f"VS Database {'Client' if prod == 'client' else 'Host'}_2.2.5_x64-setup.exe",
                 app_root / "src-tauri" / "target" / "release" / "bundle" / "nsis" / f"VS Database {'Client' if prod == 'client' else 'Host'}_2.2.2_x64-setup.exe",
                 app_root / "src-tauri" / "target" / "release" / "bundle" / "nsis" / f"VS Database {'Client' if prod == 'client' else 'Host'}_2.2.1_x64-setup.exe",
                 app_root / "src-tauri" / "target" / "release" / "bundle" / "nsis" / f"VS Database {'Client' if prod == 'client' else 'Host'}_2.2.0_x64-setup.exe",

@@ -18,38 +18,38 @@
   --vsai-font-claude: 'Source Serif 4', 'Charter', 'Lora', 'Georgia', 'Cambria', serif;
 
   /* Frosted Glass Tokens */
-  --vsai-glass-card-bg: var(--glass, rgba(255, 255, 255, 0.62));
-  --vsai-glass-card-border: var(--bd, rgba(255, 255, 255, 0.75));
-  --vsai-glass-card-shadow: var(--sh, 0 10px 40px rgba(49, 46, 129, 0.14));
-  --vsai-glass-blur: blur(24px) saturate(150%);
+  --vsai-glass-card-bg: var(--card-bg, #ffffff);
+  --vsai-glass-card-border: var(--card-border, #e5e7eb);
+  --vsai-glass-card-shadow: var(--shadow-sm, 0 1px 2px rgba(16,24,40,.04), 0 4px 12px rgba(16,24,40,.06));
+  --vsai-glass-blur: blur(16px);
 
-  /* Primary Gradients */
-  --vsai-btn-primary-grad: var(--pri, linear-gradient(135deg, #2563eb, #7c3aed));
-  --vsai-user-bubble-grad: var(--pri, linear-gradient(135deg, #2563eb, #7c3aed));
-  --vsai-blue-grad: var(--pri, linear-gradient(135deg, #2563eb, #7c3aed));
+  /* Primary Neutral Tokens */
+  --vsai-btn-primary-grad: #0f172a;
+  --vsai-user-bubble-grad: #0f172a;
+  --vsai-blue-grad: #0f172a;
 
   /* Inks & Text Colors */
   --vsai-ink: var(--tx, #0f172a);
   --vsai-ink-muted: var(--tx2, #475569);
   --vsai-ink-subtle: var(--tx2, #475569);
   --vsai-ink-faint: #94a3b8;
-  --vsai-border-subtle: var(--line, rgba(15, 23, 42, 0.1));
+  --vsai-border-subtle: var(--line, rgba(15, 23, 42, 0.08));
 
   /* Status Colors */
-  --vsai-green-bg: var(--okb, rgba(16, 185, 129, 0.15));
-  --vsai-green-border: rgba(187, 247, 208, 0.85);
-  --vsai-green-text: var(--ok, #047857);
-  --vsai-green-dot: #10b981;
+  --vsai-green-bg: var(--okb, rgba(22, 101, 52, 0.08));
+  --vsai-green-border: rgba(22, 101, 52, 0.2);
+  --vsai-green-text: var(--ok, #15803d);
+  --vsai-green-dot: #15803d;
 
-  --vsai-amber-bg: var(--wnb, rgba(245, 158, 11, 0.2));
-  --vsai-amber-border: rgba(252, 211, 77, 0.9);
-  --vsai-amber-text: var(--wn, #92400e);
+  --vsai-amber-bg: var(--wnb, rgba(180, 83, 9, 0.08));
+  --vsai-amber-border: rgba(180, 83, 9, 0.2);
+  --vsai-amber-text: var(--wn, #b45309);
 
   /* Corner Radii */
-  --vsai-radius-panel: 22px;
-  --vsai-radius-card: 22px;
-  --vsai-radius-btn: 13px;
-  --vsai-radius-pill: 9999px;
+  --vsai-radius-panel: var(--card-radius, 14px);
+  --vsai-radius-card: var(--card-radius, 14px);
+  --vsai-radius-btn: 8px;
+  --vsai-radius-pill: 8px;
 
   --vsai-ease: cubic-bezier(.22, 1, .36, 1);
 }
@@ -658,21 +658,21 @@ button#vs-ai-btn-new-chat:active {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 9px;
-  border-radius: var(--vsai-radius-pill);
+  padding: 3px 8px;
+  border-radius: 6px;
   font-size: 11px;
   background: var(--vsai-green-bg);
   border: 1px solid var(--vsai-green-border);
   color: var(--vsai-green-text);
-  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.08);
+  box-shadow: none;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .vs-ai-status-pill.blue {
-  background: rgba(239, 246, 255, 0.9);
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #0f172a;
 }
 
 .vs-ai-status-pill.warning {
@@ -685,13 +685,13 @@ button#vs-ai-btn-new-chat:active {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #16a34a;
-  box-shadow: 0 0 5px #16a34a;
+  background: #15803d;
+  box-shadow: none;
   flex-shrink: 0;
 }
 
 .vs-ai-status-dot.green {
-  background: #16a34a;
+  background: #15803d;
 }
 
 .vs-ai-user-pill {
@@ -930,12 +930,14 @@ button#vs-ai-btn-new-chat:active {
 .vs-ai-bubble-user {
   background: var(--vsai-user-bubble-grad);
   color: #ffffff;
-  padding: 14px 20px;
-  border-radius: 20px 20px 4px 20px;
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.24);
+  padding: 12px 18px;
+  border-radius: 12px 12px 2px 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   max-width: 72% !important;
   word-break: break-word;
   text-align: left;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .vs-ai-user-avatar-wrap {
@@ -946,25 +948,28 @@ button#vs-ai-btn-new-chat:active {
 }
 
 .vs-ai-user-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #dbeafe;
-  color: #1d4ed8;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: none;
 }
 
 .vs-ai-user-time {
   color: var(--vsai-ink-subtle);
   margin-top: 4px;
   text-align: center;
+  font-size: 11px;
 }
 
-/* ASSISTANT MESSAGE & LEFT GOLD CREST AVATAR */
+/* ASSISTANT MESSAGE & LEFT CREST AVATAR */
 .vs-ai-asst-avatar-wrap {
   display: flex;
   flex-direction: column;
@@ -973,12 +978,12 @@ button#vs-ai-btn-new-chat:active {
 }
 
 .vs-ai-asst-avatar-crest {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   background: #ffffff;
-  border: 1.5px solid #fbbf24;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.22);
+  border: 1px solid var(--vsai-border-subtle);
+  box-shadow: var(--vsai-glass-card-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -989,17 +994,17 @@ button#vs-ai-btn-new-chat:active {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 50%;
+  border-radius: 6px;
 }
 
 .vs-ai-bubble-assistant {
-  background: rgba(255, 255, 255, 0.94);
+  background: #ffffff;
   border: 1px solid var(--vsai-border-subtle);
-  border-radius: 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   padding: 18px 22px;
-  width: 75% !important;
-  max-width: 75% !important;
+  width: 85% !important;
+  max-width: 85% !important;
   position: relative;
   word-break: break-word;
   color: var(--vsai-ink);
@@ -1011,13 +1016,14 @@ button#vs-ai-btn-new-chat:active {
   top: 16px;
   right: 18px;
   color: var(--vsai-ink-faint);
+  font-size: 11px;
 }
 
 .vs-ai-asst-body {
   margin-top: 4px;
-  font-family: var(--vsai-font-claude) !important;
-  font-size: 15.5px !important;
-  line-height: 1.72 !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
   letter-spacing: -0.01em;
   color: #1e293b;
 }
@@ -1233,43 +1239,43 @@ button#vs-ai-btn-new-chat:active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
   white-space: nowrap;
-  font-size: 12.5px;
-  font-weight: 600;
-  transition: all 0.18s var(--vsai-ease);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  font-size: 12px;
+  font-weight: 500;
+  background: #ffffff;
+  border: 1px solid var(--vsai-border-subtle);
+  color: #334155;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .vs-ai-quick-chip-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #0f172a;
+  transform: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
-.vs-ai-quick-chip-btn.chip-purple {
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  color: #6d28d9;
-}
-
-.vs-ai-quick-chip-btn.chip-green {
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #047857;
-}
-
-.vs-ai-quick-chip-btn.chip-blue {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-}
-
+.vs-ai-quick-chip-btn.chip-purple,
+.vs-ai-quick-chip-btn.chip-green,
+.vs-ai-quick-chip-btn.chip-blue,
 .vs-ai-quick-chip-btn.chip-orange {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #c2410c;
+  background: #ffffff;
+  border: 1px solid var(--vsai-border-subtle);
+  color: #334155;
+}
+
+.vs-ai-quick-chip-btn.chip-purple:hover,
+.vs-ai-quick-chip-btn.chip-green:hover,
+.vs-ai-quick-chip-btn.chip-blue:hover,
+.vs-ai-quick-chip-btn.chip-orange:hover {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.2);
+  color: #0f172a;
 }
 
 /* ============================================================
@@ -2343,35 +2349,38 @@ button#vs-ai-btn-new-chat:active {
    DIRECT INBUILT GENERATED FILE CARD & ACTION STYLING
    ============================================================ */
 .vs-ai-direct-file-card {
-  margin: 14px 0 8px 0;
+  margin: 12px 0 8px 0;
   padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(240, 249, 255, 0.85), rgba(248, 250, 252, 0.95));
-  border: 1px solid rgba(186, 230, 253, 0.9);
-  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid var(--vsai-border-subtle);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
-  transition: all 0.2s ease;
+  box-shadow: none;
+  transition: border-color 0.15s ease;
   flex-wrap: wrap;
 }
 
 .vs-ai-direct-file-card:hover {
-  border-color: #38bdf8;
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.12);
+  border-color: rgba(15, 23, 42, 0.2);
+  box-shadow: none;
 }
 
 .vs-ai-file-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 16px;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  box-shadow: none;
 }
 
 .vs-ai-file-icon-box.pdf {
@@ -2523,9 +2532,9 @@ button#vs-ai-btn-new-chat:active {
   margin: 16px 0 10px 0;
   padding: 16px 18px;
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 14px;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--card-border, #e5e7eb);
+  border-radius: var(--card-radius, 14px);
+  box-shadow: none;
   animation: vsaiFadeIn 0.25s ease both;
 }
 
@@ -2730,15 +2739,14 @@ button#vs-ai-btn-new-chat:active {
   border-color: #93c5fd !important;
 }
 
-/* Chat Title Auto-Update Glow Effect */
+/* Chat Title Auto-Update Transition */
 .vs-ai-title-updated {
-  animation: vsAiTitleGlow 1.2s ease forwards;
+  animation: vsAiTitleUpdate 0.6s ease forwards;
 }
 
-@keyframes vsAiTitleGlow {
-  0% { color: #2563eb; transform: scale(1.03); }
-  50% { color: #7c3aed; }
-  100% { color: inherit; transform: scale(1); }
+@keyframes vsAiTitleUpdate {
+  0% { color: #0f172a; opacity: 0.7; }
+  100% { color: inherit; opacity: 1; }
 }
 
 /* ============================================================
@@ -2892,11 +2900,11 @@ button#vs-ai-btn-new-chat:active {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 11.5px;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   animation: vsPillPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -3025,35 +3033,21 @@ button#vs-ai-btn-new-chat:active {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(239, 246, 255, 0.8), rgba(245, 243, 255, 0.8));
-  border: 1px solid rgba(191, 219, 254, 0.8);
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
-  animation: vsAiThinkingPulse 2s ease-in-out infinite;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid var(--vsai-border-subtle);
+  border-radius: 8px;
+  box-shadow: none;
   margin: 4px 0;
 }
 
-@keyframes vsAiThinkingPulse {
-  0% { border-color: rgba(191, 219, 254, 0.8); box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08); }
-  50% { border-color: rgba(167, 139, 250, 0.9); box-shadow: 0 6px 18px rgba(124, 58, 237, 0.15); }
-  100% { border-color: rgba(191, 219, 254, 0.8); box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08); }
-}
-
 .vs-ai-thinking-sparkle {
-  font-size: 18px;
+  font-size: 14px;
   line-height: 1;
-  animation: vsAiSparkleRotate 3s ease-in-out infinite;
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
-}
-
-@keyframes vsAiSparkleRotate {
-  0% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.2) rotate(18deg); }
-  100% { transform: scale(1) rotate(0deg); }
+  color: var(--vsai-ink-muted);
 }
 
 .vs-ai-thinking-content {

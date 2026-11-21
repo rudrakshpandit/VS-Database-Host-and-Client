@@ -1,5 +1,5 @@
 """
-Backend Update API & License Verification Test Suite for VS Database Release v2.2.4
+Backend Update API & License Verification Test Suite for VS Database Release v2.2.4.1
 """
 import sys
 import os
@@ -90,9 +90,9 @@ def test_license_file():
     print(f"Line 3: {line_3}")
     print(f"Line 4: {line_4}")
     
-    assert "Software:         VS Database, Version 2.2.4" in lines[2], f"Line 3 does not match expected version 2.2.4: '{lines[2]}'"
+    assert "Software:         VS Database, Version 2.2.4.1" in lines[2], f"Line 3 does not match expected version 2.2.4.1: '{lines[2]}'"
     assert "2026" in line_4 and "Copyright" in line_4, f"Line 4 does not state Copyright 2026: '{line_4}'"
-    print("✓ PASS: License file correctly states 'Software: VS Database, Version 2.2.4', Copyright 2026.")
+    print("✓ PASS: License file correctly states 'Software: VS Database, Version 2.2.4.1', Copyright 2026.")
 
 if __name__ == "__main__":
     test_backend_direct_calls()

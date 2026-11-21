@@ -136,9 +136,9 @@ tr[tabindex="0"]:focus-visible {
 .vs-kb-palette-card {
   width: 90%;
   max-width: 580px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 16px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--card-border, #e5e7eb);
+  border-radius: var(--card-radius, 14px);
   box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
   overflow: hidden;
   display: flex;

@@ -29,41 +29,41 @@
   const GENERATION_MODE_CONFIG = {
     pdf: {
       title: 'PDF Document',
-      icon: '📑',
+      icon: '',
       class: 'vs-mode-pdf',
-      badge: '📑 Direct PDF Mode',
+      badge: 'Direct PDF Mode',
       desc: 'AI will generate a direct statutory PDF file',
       placeholder: 'Describe the PDF document to generate (e.g., Notice reply under Section 148, Legal Advisory Brief)...'
     },
     excel: {
       title: 'Excel Spreadsheet',
-      icon: '📊',
+      icon: '',
       class: 'vs-mode-excel',
-      badge: '📊 Direct Excel Mode',
+      badge: 'Direct Excel Mode',
       desc: 'AI will generate a multi-sheet .xlsx workbook with formulas & tables',
       placeholder: 'Describe the Excel spreadsheet to generate (e.g., Footwear company 35 GST transactions, ITC ledger)...'
     },
     gsheet: {
       title: 'Google Sheet',
-      icon: '📈',
+      icon: '',
       class: 'vs-mode-gsheet',
-      badge: '📈 Direct Google Sheet Mode',
+      badge: 'Direct Google Sheet Mode',
       desc: 'AI will generate a structured cloud-ready financial dataset',
       placeholder: 'Describe the Google Sheet dataset (e.g., Monthly TDS computation, Vendor reconciliation)...'
     },
     word: {
       title: 'Word Document',
-      icon: '📄',
+      icon: '',
       class: 'vs-mode-word',
-      badge: '📄 Direct Word Mode',
+      badge: 'Direct Word Mode',
       desc: 'AI will generate an executive .docx document with formal legal clauses',
       placeholder: 'Describe the Word document to draft (e.g., Employment Agreement, Partnership Deed, Board Resolution)...'
     },
     docs: {
       title: 'Google Docs',
-      icon: '📝',
+      icon: '',
       class: 'vs-mode-docs',
-      badge: '📝 Direct Google Docs Mode',
+      badge: 'Direct Google Docs Mode',
       desc: 'AI will generate a structured legal draft ready for Google Docs',
       placeholder: 'Describe the Google Doc to draft (e.g., Statutory Appeal Petition, Legal Notice)...'
     }
@@ -1403,7 +1403,7 @@
       <div class="bub vs-ai-bubble-assistant">
         <div class="vs-ai-asst-body">
           <div class="vs-ai-thinking-card">
-            <div class="vs-ai-thinking-sparkle">✨</div>
+            <div class="vs-ai-thinking-sparkle"><svg class="i" style="width:14px;height:14px;color:var(--tx2,#475569);" aria-hidden="true"><use href="#ai"/></svg></div>
             <div class="vs-ai-thinking-content">
               <span class="vs-ai-thinking-label">${escapeHtml(thinkingMsg)}</span>
               <div class="typing"><i></i><i></i><i></i></div>
@@ -2304,8 +2304,8 @@
           <!-- Right Sidebar: Select-Area-to-Revise AI Studio -->
           <div class="vs-ai-iprev-side-pane">
             <div class="vs-ai-iprev-side-header">
-              <div style="display:flex;align-items:center;gap:6px;font-weight:800;font-size:14px;color:#0f172a;">
-                <span>✨ Revise Selected Area</span>
+              <div style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:#0f172a;">
+                <span>Revise Selected Area</span>
               </div>
               <div style="font-size:11.5px;color:#64748b;margin-top:2px;">
                 Select any section or text in the preview, enter your instruction, and VS AI will generate a revised document.
@@ -2329,16 +2329,16 @@
               <label class="vs-ai-iprev-label" for="vs-ai-iprev-instruction">Instruction for VS AI:</label>
               <textarea id="vs-ai-iprev-instruction" class="vs-ai-input" rows="3" style="font-size:12.5px;line-height:1.45;resize:vertical;" placeholder="e.g., 'Update the disputed tax amount to ₹4,15,000', 'Add citation to Circular 183/15/2022-GST', 'Make arguments more assertive'..."></textarea>
               <div class="vs-ai-iprev-chip-row">
-                <button type="button" class="vs-ai-iprev-chip" data-ins="Strengthen statutory citations and judicial precedents in this section">⚖️ Add Legal Citations</button>
-                <button type="button" class="vs-ai-iprev-chip" data-ins="Convert the figures in this section into a clean structured reconciliation table">📊 Convert to Table</button>
-                <button type="button" class="vs-ai-iprev-chip" data-ins="Make this section more formal, concise, and authoritative for tax authorities">✒️ Make Formal</button>
+                <button type="button" class="vs-ai-iprev-chip" data-ins="Strengthen statutory citations and judicial precedents in this section">Add Legal Citations</button>
+                <button type="button" class="vs-ai-iprev-chip" data-ins="Convert the figures in this section into a clean structured reconciliation table">Convert to Table</button>
+                <button type="button" class="vs-ai-iprev-chip" data-ins="Make this section more formal, concise, and authoritative for tax authorities">Make Formal</button>
               </div>
             </div>
 
             <div id="vs-ai-iprev-status" style="display:none;font-size:12px;padding:8px 10px;border-radius:8px;margin-bottom:8px;"></div>
 
             <button type="button" class="btn primary" id="vs-ai-iprev-apply-btn" style="width:100%;padding:10px 14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-              <span>✨ Apply Change & Generate New Document</span>
+              <span>Apply Change & Generate New Document</span>
             </button>
           </div>
         </div>
@@ -2662,7 +2662,7 @@
         }
       } finally {
         applyBtn.disabled = false;
-        applyBtn.innerHTML = `<span>✨ Apply Change & Generate New Document</span>`;
+        applyBtn.innerHTML = `<span>Apply Change & Generate New Document</span>`;
       }
     };
 
@@ -3441,8 +3441,8 @@
 
             <!-- Ask AI to Enhance Selected Area -->
             <button type="button" class="btn vs-ai-enhance-selection-btn" id="vs-ai-btn-enhance-selection" title="Highlight any section below and click to instruct AI to improve it">
-              <svg class="i" style="width:14px;height:14px;color:#2563eb;" aria-hidden="true"><use href="#ai"/></svg>
-              <span>✨ Ask AI to Enhance</span>
+              <svg class="i" style="width:14px;height:14px;color:var(--tx2,#475569);" aria-hidden="true"><use href="#ai"/></svg>
+              <span>Ask AI to Enhance</span>
             </button>
 
             <div class="vs-ai-canvas-divider"></div>
@@ -3498,7 +3498,7 @@
         <!-- AI Enhance Floating Tool Popover -->
         <div id="vs-ai-enhance-popover" class="vs-ai-enhance-popover" style="display:none;">
           <div class="vs-ai-enhance-popover-header">
-            <span>✨ Instruct VS AI to Enhance / Change Area</span>
+            <span>Instruct Revision</span>
             <button type="button" class="vs-ai-enhance-popover-close" id="popover-close">&times;</button>
           </div>
           <div class="vs-ai-enhance-preview-text" id="vs-ai-enhance-selected-preview"></div>

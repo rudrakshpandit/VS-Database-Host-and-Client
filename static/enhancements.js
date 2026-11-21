@@ -365,19 +365,29 @@
     let lastRenamedNode = null;
 
     // Tree actions
-    document.querySelector('#tpl-add-root').onclick = () => {
-      const name = window.prompt('Enter new Root Folder name:');
+    document.querySelector('#tpl-add-root').onclick = async () => {
+      let name = null;
+      if (typeof window.showCreateFolderModal === 'function') {
+        name = await window.showCreateFolderModal({ title: 'New Root Folder', subtitle: 'Enter root folder name (e.g. GST, Income Tax, Bank)', buttonText: 'Add Root Folder' });
+      } else {
+        name = window.prompt('Enter new Root Folder name:');
+      }
       if (!name || !name.trim()) return;
       currentTree.push({ name: name.trim(), children: [] });
       selectedPath = [currentTree.length - 1];
       renderTree();
     };
 
-    document.querySelector('#tpl-add-sub').onclick = () => {
+    document.querySelector('#tpl-add-sub').onclick = async () => {
       if (!selectedPath) return;
       const target = getNodeByPath(currentTree, selectedPath);
       if (!target) return;
-      const name = window.prompt(`Enter subfolder under "${target.name}":`);
+      let name = null;
+      if (typeof window.showCreateFolderModal === 'function') {
+        name = await window.showCreateFolderModal({ title: 'New Subfolder', subtitle: `Adding inside: ${target.name}`, buttonText: 'Add Subfolder' });
+      } else {
+        name = window.prompt(`Enter subfolder under "${target.name}":`);
+      }
       if (!name || !name.trim()) return;
       if (!target.children) target.children = [];
       target.children.push({ name: name.trim(), children: [] });
@@ -385,12 +395,17 @@
       renderTree();
     };
 
-    document.querySelector('#tpl-rename').onclick = () => {
+    document.querySelector('#tpl-rename').onclick = async () => {
       if (!selectedPath) return;
       const target = getNodeByPath(currentTree, selectedPath);
       if (!target) return;
       const oldName = target.name;
-      const name = window.prompt('Enter new folder name:', target.name);
+      let name = null;
+      if (typeof window.showCreateFolderModal === 'function') {
+        name = await window.showCreateFolderModal({ title: 'Rename Folder', subtitle: `Renaming "${oldName}"`, initialValue: oldName, buttonText: 'Rename' });
+      } else {
+        name = window.prompt('Enter new folder name:', target.name);
+      }
       if (!name || !name.trim() || name.trim() === oldName) return;
       target.name = name.trim();
       lastRenamedNode = { old_name: oldName, new_name: name.trim() };
@@ -722,6 +737,30 @@
     if (client.client_type && !activeTypes.some(ft => ft.name.toLowerCase() === client.client_type.toLowerCase())) {
       activeTypes.push({ name: client.client_type, status: 'disabled' });
     }
+
+    const rawMobile = (client.mobile || '').trim();
+    let mobileCc = '+91';
+    let mobileDigits = rawMobile;
+    if (mobileDigits.startsWith('+')) {
+      const parts = mobileDigits.split(' ');
+      if (parts.length > 1) {
+        mobileCc = parts[0];
+        mobileDigits = parts.slice(1).join('');
+      } else if (mobileDigits.startsWith('+91')) {
+        mobileCc = '+91'; mobileDigits = mobileDigits.slice(3);
+      } else if (mobileDigits.startsWith('+1')) {
+        mobileCc = '+1'; mobileDigits = mobileDigits.slice(2);
+      } else if (mobileDigits.startsWith('+44')) {
+        mobileCc = '+44'; mobileDigits = mobileDigits.slice(3);
+      } else if (mobileDigits.startsWith('+971')) {
+        mobileCc = '+971'; mobileDigits = mobileDigits.slice(4);
+      } else if (mobileDigits.startsWith('+61')) {
+        mobileCc = '+61'; mobileDigits = mobileDigits.slice(3);
+      } else if (mobileDigits.startsWith('+65')) {
+        mobileCc = '+65'; mobileDigits = mobileDigits.slice(3);
+      }
+    }
+
     overlay.innerHTML = `
       <div class="portal-dialog" style="width:min(540px, 94vw);">
         <button class="modal-close" aria-label="Close">×</button>
@@ -741,7 +780,20 @@
             </div>
             <div>
               <label style="font-weight:700;">Mobile Number *</label>
-              <input id="edit-client-mobile" value="${escapeHtml(client.mobile || '')}" required>
+              <div class="vs-phone-group">
+                <div class="vs-phone-prefix">
+                  <select id="edit-client-mobile-cc" class="vs-phone-select" aria-label="Country Code">
+                    <option value="+91" ${mobileCc === '+91' ? 'selected' : ''}>+91</option>
+                    <option value="+1" ${mobileCc === '+1' ? 'selected' : ''}>+1</option>
+                    <option value="+44" ${mobileCc === '+44' ? 'selected' : ''}>+44</option>
+                    <option value="+971" ${mobileCc === '+971' ? 'selected' : ''}>+971</option>
+                    <option value="+61" ${mobileCc === '+61' ? 'selected' : ''}>+61</option>
+                    <option value="+65" ${mobileCc === '+65' ? 'selected' : ''}>+65</option>
+                  </select>
+                  <svg class="vs-phone-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+                <input id="edit-client-mobile" class="vs-phone-input" type="tel" maxlength="10" placeholder="10-digit number" value="${escapeHtml(mobileDigits)}" required>
+              </div>
             </div>
           </div>
           <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;">
@@ -1365,7 +1417,7 @@
         <!-- HEADER -->
         <div class="explorer-header">
           <div class="explorer-title-group">
-            <span style="font-size:22px;">📁</span>
+            <svg class="i" style="width:24px;height:24px;stroke:var(--tx);fill:none;"><use href="#folder"/></svg>
             <div>
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                 <h2 style="margin:0;font-size:18px;">${escapeHtml(client.name)}</h2>
@@ -1377,20 +1429,20 @@
           </div>
 
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <button class="tpl-btn" id="btn-client-pdf-passwords" style="display:flex;align-items:center;gap:4px;background:#fef3c7;border-color:#fde68a;color:#92400e;">🔑 PDF Passwords</button>
-            <button class="tpl-btn" id="btn-customize-override" style="display:flex;align-items:center;gap:4px;background:#f0fdf4;border-color:#bbf7d0;color:#166534;">⚙ Customize Structure</button>
-            <button class="tpl-btn" id="btn-open-in-explorer" style="display:flex;align-items:center;gap:4px;">🗁 Open Local Folder</button>
-            <button class="tpl-btn" id="btn-reconcile-this" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg, #10b981, #059669);border-color:#059669;color:#ffffff;font-weight:700;">🔄 Scan & Reconcile</button>
+            <button class="tpl-btn" id="btn-client-pdf-passwords" style="display:flex;align-items:center;gap:4px;background:#fef3c7;border-color:#fde68a;color:#92400e;"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;"><use href="#lock"/></svg>PDF Passwords</button>
+            <button class="tpl-btn" id="btn-customize-override" style="display:flex;align-items:center;gap:4px;background:#f0fdf4;border-color:#bbf7d0;color:#166534;"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;"><use href="#settings"/></svg>Customize Structure</button>
+            <button class="tpl-btn" id="btn-open-in-explorer" style="display:flex;align-items:center;gap:4px;"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;"><use href="#folder"/></svg>Open Local Folder</button>
+            <button class="tpl-btn" id="btn-reconcile-this" style="display:flex;align-items:center;gap:5px;"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;"><use href="#refresh"/></svg>Scan & Reconcile</button>
           </div>
         </div>
 
         <!-- NAVIGATION & SEARCH BAR -->
         <div class="explorer-nav-bar">
           <div class="explorer-nav-btns">
-            <button class="nav-icon-btn" id="nav-back" title="Back">⮜</button>
-            <button class="nav-icon-btn" id="nav-forward" title="Forward">⮞</button>
-            <button class="nav-icon-btn" id="nav-root" title="Client Root">🏠</button>
-            <button class="nav-icon-btn" id="nav-refresh" title="Refresh">🔄</button>
+            <button class="nav-icon-btn" id="nav-back" title="Back"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button class="nav-icon-btn" id="nav-forward" title="Forward"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+            <button class="nav-icon-btn" id="nav-root" title="Client Root"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
+            <button class="nav-icon-btn" id="nav-refresh" title="Refresh"><svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;"><use href="#refresh"/></svg></button>
           </div>
 
           <div class="explorer-breadcrumbs" id="crumb-trail"></div>
@@ -1404,8 +1456,8 @@
         <div class="explorer-action-bar">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             <button class="tpl-btn primary" id="btn-new-subfolder" style="font-size:11px;padding:4px 10px;min-height:28px;">+ New Folder</button>
-            <button class="tpl-btn" id="btn-upload-file" style="font-size:11px;padding:4px 10px;min-height:28px;">⬆ Upload File</button>
-            <button class="tpl-btn" id="btn-create-missing" style="font-size:11px;padding:4px 10px;min-height:28px;">📁 Create Missing Folders</button>
+            <button class="tpl-btn" id="btn-upload-file" style="font-size:11px;padding:4px 10px;min-height:28px;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload File</button>
+            <button class="tpl-btn" id="btn-create-missing" style="font-size:11px;padding:4px 10px;min-height:28px;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#folder"/></svg>Create Missing Folders</button>
             <input type="file" id="explorer-file-input" style="display:none;" multiple>
           </div>
 
@@ -1587,7 +1639,7 @@
             <tr class="explorer-item-row" data-name="${escapeHtml(item.name)}" data-type="folder" data-path="${escapeHtml(itemRel)}">
               <td>
                 <div class="item-name-cell row-open-folder" data-path="${escapeHtml(itemRel)}">
-                  <span class="item-icon">📁</span>
+                  <span class="item-icon"><svg class="i" style="width:14px;height:14px;stroke:var(--tx);fill:none;vertical-align:middle;margin-right:4px;"><use href="#folder"/></svg></span>
                   <span>${escapeHtml(item.name)}</span>
                   ${isMissing ? '<span style="color:#e65100;font-size:10px;font-weight:700;">(missing)</span>' : ''}
                 </div>
@@ -1600,10 +1652,10 @@
               <td><span class="muted">—</span></td>
               <td style="text-align:right;">
                 <div class="item-actions" style="justify-content:flex-end;">
-                  <button class="item-act-btn row-open-folder" data-path="${escapeHtml(itemRel)}" title="Open Folder">📂 Open</button>
-                  <button class="item-act-btn btn-ren-folder" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Rename">✏</button>
-                  <button class="item-act-btn btn-mv-folder" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Move">⤹</button>
-                  <button class="item-act-btn danger btn-del-folder" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Delete">🗑</button>
+                  <button class="item-act-btn row-open-folder" data-path="${escapeHtml(itemRel)}" title="Open Folder"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:2px;"><use href="#folder"/></svg>Open</button>
+                  <button class="item-act-btn btn-ren-folder" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Rename"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;"><use href="#edit"/></svg></button>
+                  <button class="item-act-btn btn-mv-folder" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Move"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;" viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+                  <button class="item-act-btn danger btn-del-folder" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Delete"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;"><use href="#trash"/></svg></button>
                 </div>
               </td>
             </tr>
@@ -1613,7 +1665,7 @@
             <tr class="explorer-item-row" data-name="${escapeHtml(item.name)}" data-type="file" data-path="${escapeHtml(itemRel)}">
               <td>
                 <div class="item-name-cell">
-                  <span class="item-icon">${item.name.toLowerCase().endsWith('.pdf') ? '📑' : '📄'}</span>
+                  <span class="item-icon"><svg class="i" style="width:14px;height:14px;stroke:var(--tx2);fill:none;vertical-align:middle;margin-right:4px;"><use href="#file"/></svg></span>
                   <span>${escapeHtml(item.name)}</span>
                   ${isMissing ? '<span style="color:#e65100;font-size:10px;font-weight:700;">(missing)</span>' : ''}
                 </div>
@@ -1623,16 +1675,16 @@
               <td><span style="font-size:11px;color:var(--muted);">${formatModifiedTime(item.modified_at)}</span></td>
               <td style="text-align:right;">
                 <div class="item-actions" style="justify-content:flex-end;">
-                  <button type="button" class="item-act-btn btn-view-inapp-pdf" onclick="window.openUniversalPdfViewer('${escapeHtml(fileNo)}', '${escapeHtml(itemRel).replace(/\\/g, '/')}', '${escapeHtml(storageKind)}', '${escapeHtml(item.name)}')" title="View in App">👁 View</button>
+                  <button type="button" class="item-act-btn btn-view-inapp-pdf" onclick="window.openUniversalPdfViewer('${escapeHtml(fileNo)}', '${escapeHtml(itemRel).replace(/\\/g, '/')}', '${escapeHtml(storageKind)}', '${escapeHtml(item.name)}')" title="View in App"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:2px;" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</button>
                   ${item.name.toLowerCase().endsWith('.pdf') ? `
-                    <button class="item-act-btn btn-lock-pdf" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Lock PDF with Password">🔒 Lock</button>
-                    <button class="item-act-btn btn-unlock-pdf" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Unlock PDF">🔓 Unlock</button>
+                    <button class="item-act-btn btn-lock-pdf" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Lock PDF with Password"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:2px;"><use href="#lock"/></svg>Lock</button>
+                    <button class="item-act-btn btn-unlock-pdf" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Unlock PDF"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:2px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>Unlock</button>
                   ` : ''}
-                  <button type="button" class="item-act-btn btn-ai-ren-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="AI Auto Rename (First 2 Pages)">✨ AI Rename</button>
-                  <button class="item-act-btn btn-ren-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Rename">✏</button>
-                  <button class="item-act-btn btn-mv-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Move">⤹</button>
-                  <button class="item-act-btn btn-cp-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Copy">📋</button>
-                  <button class="item-act-btn danger btn-del-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Delete">🗑</button>
+                  <button type="button" class="item-act-btn btn-ai-ren-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="AI Auto Rename (First 2 Pages)"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:2px;"><use href="#ai"/></svg>AI Rename</button>
+                  <button class="item-act-btn btn-ren-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Rename"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;"><use href="#edit"/></svg></button>
+                  <button class="item-act-btn btn-mv-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Move"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;" viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+                  <button class="item-act-btn btn-cp-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Copy"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;"><use href="#copy"/></svg></button>
+                  <button class="item-act-btn danger btn-del-file" data-name="${escapeHtml(item.name)}" data-path="${escapeHtml(itemRel)}" title="Delete"><svg class="i" style="width:11px;height:11px;stroke:currentColor;fill:none;"><use href="#trash"/></svg></button>
                 </div>
               </td>
             </tr>
@@ -1906,7 +1958,12 @@
     };
 
     const promptNewFolder = async () => {
-      const name = window.prompt(`Create new folder inside "${currentPath || 'Client Root'}":`);
+      let name = null;
+      if (typeof window.showCreateFolderModal === 'function') {
+        name = await window.showCreateFolderModal(currentPath || '');
+      } else {
+        name = window.prompt(`Create new folder inside "${currentPath || 'Client Root'}":`);
+      }
       if (!name || !name.trim()) return;
       const targetRel = currentPath ? `${currentPath}/${name.trim()}` : name.trim();
       try {
@@ -2071,7 +2128,7 @@
           method: 'POST',
           body: JSON.stringify({ relative_path: currentPath })
         });
-        showNotif(`📂 Opened in Explorer: ${res.opened_path || 'Local Folder'}`);
+        showNotif(`Opened in Explorer: ${res.opened_path || 'Local Folder'}`);
       } catch (err) {
         showNotif(err.message, true);
       }
@@ -2094,7 +2151,7 @@
         showNotif(error.message, true);
       } finally {
         scanBtn.disabled = false;
-        scanBtn.textContent = '🔄 Scan & Reconcile';
+        scanBtn.innerHTML = '<svg class="i" style="width:13px;height:13px;stroke:currentColor;fill:none;"><use href="#refresh"/></svg>Scan & Reconcile';
       }
     };
 
@@ -2111,7 +2168,7 @@
         showNotif(error.message, true);
       } finally {
         createBtn.disabled = false;
-        createBtn.textContent = '📁 Create Missing Folders';
+        createBtn.innerHTML = '<svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#folder"/></svg>Create Missing Folders';
       }
     };
 
@@ -2158,10 +2215,10 @@
             
             <div class="tpl-toolbar" style="margin-top:10px;">
               <button class="tpl-btn" id="co-btn-subfolder" disabled>+ Subfolder</button>
-              <button class="tpl-btn" id="co-btn-rename" disabled>✏ Rename</button>
-              <button class="tpl-btn" id="co-btn-up" disabled>▲ Up</button>
-              <button class="tpl-btn" id="co-btn-down" disabled>▼ Down</button>
-              <button class="tpl-btn danger" id="co-btn-delete" disabled>🗑 Delete</button>
+              <button class="tpl-btn" id="co-btn-rename" disabled><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#edit"/></svg>Rename</button>
+              <button class="tpl-btn" id="co-btn-up" disabled><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:2px;" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Up</button>
+              <button class="tpl-btn" id="co-btn-down" disabled><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:2px;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>Down</button>
+              <button class="tpl-btn danger" id="co-btn-delete" disabled><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#trash"/></svg>Delete</button>
             </div>
           </div>
 
@@ -2171,8 +2228,8 @@
             <div class="tpl-tree-box" id="co-preview-container" style="max-height:42vh;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;"></div>
             
             <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-              <button class="tpl-btn danger" id="co-btn-reset" style="width:100%;">↺ Reset to Firm Type Default</button>
-              <button class="tpl-btn primary" id="co-btn-save" style="width:100%;min-height:36px;font-size:12px;">💾 Save Client Override</button>
+              <button class="tpl-btn danger" id="co-btn-reset" style="width:100%;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#refresh"/></svg>Reset to Firm Type Default</button>
+              <button class="tpl-btn primary" id="co-btn-save" style="width:100%;min-height:36px;font-size:12px;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#check"/></svg>Save Client Override</button>
             </div>
           </div>
         </div>
@@ -2283,18 +2340,28 @@
     };
 
     // Actions
-    overlay.querySelector('#co-add-root').onclick = () => {
-      const name = window.prompt('Enter new root folder name (e.g. "GST", "Income Tax", "Bank"):');
+    overlay.querySelector('#co-add-root').onclick = async () => {
+      let name = null;
+      if (typeof window.showCreateFolderModal === 'function') {
+        name = await window.showCreateFolderModal({ title: 'New Root Folder', subtitle: 'Enter root folder name (e.g. "GST", "Income Tax", "Bank")', buttonText: 'Add Root Folder' });
+      } else {
+        name = window.prompt('Enter new root folder name (e.g. "GST", "Income Tax", "Bank"):');
+      }
       if (!name || !name.trim()) return;
       treeState.push({ name: name.trim(), children: [] });
       selectedPath = `${treeState.length - 1}`;
       renderTree();
     };
 
-    overlay.querySelector('#co-btn-subfolder').onclick = () => {
+    overlay.querySelector('#co-btn-subfolder').onclick = async () => {
       const found = getNodeByPath(selectedPath);
       if (!found) return;
-      const name = window.prompt(`Enter subfolder name inside "${found.node.name}":`);
+      let name = null;
+      if (typeof window.showCreateFolderModal === 'function') {
+        name = await window.showCreateFolderModal({ title: 'New Subfolder', subtitle: `Adding inside: ${found.node.name}`, buttonText: 'Add Subfolder' });
+      } else {
+        name = window.prompt(`Enter subfolder name inside "${found.node.name}":`);
+      }
       if (!name || !name.trim()) return;
       if (!found.node.children) found.node.children = [];
       found.node.children.push({ name: name.trim(), children: [] });
@@ -2302,10 +2369,16 @@
       renderTree();
     };
 
-    overlay.querySelector('#co-btn-rename').onclick = () => {
+    overlay.querySelector('#co-btn-rename').onclick = async () => {
       const found = getNodeByPath(selectedPath);
       if (!found) return;
-      const newName = window.prompt(`Rename "${found.node.name}" to:`, found.node.name);
+      const oldName = found.node.name;
+      let newName = null;
+      if (typeof window.showCreateFolderModal === 'function') {
+        newName = await window.showCreateFolderModal({ title: 'Rename Folder', subtitle: `Renaming "${oldName}"`, initialValue: oldName, buttonText: 'Rename' });
+      } else {
+        newName = window.prompt(`Rename "${found.node.name}" to:`, found.node.name);
+      }
       if (!newName || !newName.trim() || newName.trim() === found.node.name) return;
       found.node.name = newName.trim();
       renderTree();
@@ -2359,7 +2432,7 @@
       } catch (err) {
         msgEl.innerHTML = message(err.message, true);
         overlay.querySelector('#co-btn-reset').disabled = false;
-        overlay.querySelector('#co-btn-reset').textContent = '↺ Reset to Firm Type Default';
+        overlay.querySelector('#co-btn-reset').innerHTML = '<svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#refresh"/></svg>Reset to Firm Type Default';
       }
     };
 
@@ -2378,7 +2451,7 @@
       } catch (err) {
         msgEl.innerHTML = message(err.message, true);
         overlay.querySelector('#co-btn-save').disabled = false;
-        overlay.querySelector('#co-btn-save').textContent = '💾 Save Client Override';
+        overlay.querySelector('#co-btn-save').innerHTML = '<svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#check"/></svg>Save Client Override';
       }
     };
 
@@ -2399,14 +2472,14 @@
     container.innerHTML = `
       <div class="clients-bulk-glass-bar">
         <div class="bulk-count">
-          <span style="font-size:16px;">☑️</span>
+          <svg class="i" style="width:14px;height:14px;stroke:var(--tx);fill:none;vertical-align:middle;margin-right:6px;"><use href="#check"/></svg>
           <span><strong>${count}</strong> client${count > 1 ? 's' : ''} selected</span>
         </div>
         <div class="bulk-actions">
-          <button type="button" class="tpl-btn" id="bulk-btn-manage-access" style="background:#eef2ff;color:#3730a3;border-color:#c7d2fe;font-weight:600;padding:6px 12px;font-size:12px;">🌐 Manage Access (${count})</button>
-          <button type="button" class="tpl-btn" id="bulk-btn-export" style="background:#f0fdf4;color:#166534;border-color:#bbf7d0;font-weight:600;padding:6px 12px;font-size:12px;">📊 Export Selected (${count})</button>
-          <button type="button" class="tpl-btn" id="bulk-btn-delete" style="background:#fef2f2;color:#991b1b;border-color:#fecaca;font-weight:600;padding:6px 12px;font-size:12px;">🗑️ Delete Selected (${count})</button>
-          <button type="button" class="tpl-btn" id="bulk-btn-deselect" style="background:#f8fafc;color:#64748b;padding:6px 10px;font-size:12px;">✖ Clear Selection</button>
+          <button type="button" class="tpl-btn" id="bulk-btn-manage-access" style="background:#f8fafc;color:#0f172a;border-color:var(--line);font-weight:600;padding:6px 12px;font-size:12px;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#drive"/></svg>Manage Access (${count})</button>
+          <button type="button" class="tpl-btn" id="bulk-btn-export" style="background:#f8fafc;color:#0f172a;border-color:var(--line);font-weight:600;padding:6px 12px;font-size:12px;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#dl"/></svg>Export Selected (${count})</button>
+          <button type="button" class="tpl-btn" id="bulk-btn-delete" style="background:#fef2f2;color:#991b1b;border-color:#fecaca;font-weight:600;padding:6px 12px;font-size:12px;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#trash"/></svg>Delete Selected (${count})</button>
+          <button type="button" class="tpl-btn" id="bulk-btn-deselect" style="background:#f8fafc;color:#64748b;border-color:var(--line);padding:6px 10px;font-size:12px;"><svg class="i" style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:4px;"><use href="#close"/></svg>Clear Selection</button>
         </div>
       </div>
     `;

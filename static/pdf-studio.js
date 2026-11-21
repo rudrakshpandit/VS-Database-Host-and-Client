@@ -351,21 +351,21 @@ function promptPageNumberingUpdate() {
     if (!bg) {
       bg = document.createElement("div");
       bg.id = "st-pnum-dialog";
-      bg.style.cssText = "position:fixed;inset:0;z-index:2500;display:grid;place-items:center;background:rgba(20,15,40,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity 0.25s;";
+      bg.style.cssText = "position:fixed;inset:0;z-index:2500;display:grid;place-items:center;background:rgba(15,23,42,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity 0.2s;";
       bg.innerHTML = `
-        <div class="glass" style="width:min(440px,90vw);padding:26px 28px;border-radius:22px;box-shadow:0 18px 45px rgba(40,25,80,0.28);background:rgba(255,255,255,0.88);display:flex;flex-direction:column;gap:18px;">
+        <div class="glass" style="width:min(440px,90vw);padding:24px;border-radius:14px;box-shadow:0 20px 25px -5px rgba(15,23,42,0.1),0 8px 10px -6px rgba(15,23,42,0.04);background:#ffffff;border:1px solid rgba(15,23,42,0.1);display:flex;flex-direction:column;gap:16px;">
           <div style="display:flex;align-items:flex-start;gap:14px;">
-            <div style="width:40px;height:40px;border-radius:12px;background:rgba(90,120,255,0.14);display:grid;place-items:center;color:#4c5fe0;flex-shrink:0;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v16H5zM10 9l2-2v7"/></svg>
+            <div style="width:36px;height:36px;border-radius:8px;background:#f1f5f9;border:1px solid rgba(15,23,42,0.08);display:grid;place-items:center;color:#0f172a;flex-shrink:0;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v16H5zM10 9l2-2v7"/></svg>
             </div>
             <div>
-              <h3 style="margin:0;font-size:16px;font-weight:700;color:var(--text,#1e1b4b);">Page Numbers Notice</h3>
-              <p style="margin:6px 0 0;font-size:13.5px;color:var(--dim,#6b7280);line-height:1.45;">This task will change your page numbers. Do you want to:</p>
+              <h3 style="margin:0;font-size:15px;font-weight:700;color:var(--text,#0f172a);">Page Numbers Notice</h3>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--dim,#475569);line-height:1.45;">This task will change your page numbers. Do you want to:</p>
             </div>
           </div>
-          <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:4px;">
-            <button class="btn ghost" id="st-pnum-keep" style="padding:9px 18px;border-radius:10px;font-size:13px;font-weight:600;">Keep Same</button>
-            <button class="btn" id="st-pnum-update" style="padding:9px 20px;border-radius:10px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#6fb4ff,#2756d9);color:#fff;">Update</button>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
+            <button class="btn ghost" id="st-pnum-keep" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;">Keep Same</button>
+            <button class="btn" id="st-pnum-update" style="padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;background:#0f172a;color:#fff;">Update</button>
           </div>
         </div>
       `;
@@ -611,7 +611,7 @@ function renderToolCards() {
 
     return `
       <button class="tool ${isSelected ? "on" : ""}" data-tool="${t.id}" ${isDis ? "disabled" : ""} aria-label="${escapeHtml(t.name)}">
-        <span class="ti" style="background:linear-gradient(135deg, ${t.gradient})">
+        <span class="ti">
           <svg viewBox="0 0 24 24"><path d="${t.icon}"/></svg>
         </span>
         <span>

@@ -547,6 +547,19 @@
     },
     applyDragRegions: applyDragRegions,
     isClientMode: async function() {
+      if (typeof window !== 'undefined') {
+        try {
+          if (window.location && window.location.search) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'client' || params.get('client') === '1') return true;
+            if (params.get('mode') === 'host') return false;
+          }
+          if (typeof window.__vsIsClientMode === 'boolean') return window.__vsIsClientMode;
+          const stored = localStorage.getItem('vs_app_mode') || localStorage.getItem('vs-app-mode');
+          if (stored === 'client') return true;
+          if (stored === 'host') return false;
+        } catch (_) {}
+      }
       const inv = getTauriInvoke();
       if (inv) {
         try {
@@ -556,6 +569,18 @@
       return false;
     },
     getAppMode: async function() {
+      if (typeof window !== 'undefined') {
+        try {
+          if (window.location && window.location.search) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'client' || params.get('client') === '1') return 'client';
+            if (params.get('mode') === 'host') return 'host';
+          }
+          if (typeof window.__vsIsClientMode === 'boolean') return window.__vsIsClientMode ? 'client' : 'host';
+          const stored = localStorage.getItem('vs_app_mode') || localStorage.getItem('vs-app-mode');
+          if (stored) return stored;
+        } catch (_) {}
+      }
       const inv = getTauriInvoke();
       if (inv) {
         try {
