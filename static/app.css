@@ -5428,43 +5428,43 @@ select:focus, .glass-select:focus {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid var(--line);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 10px rgba(90, 70, 160, 0.08);
   font: inherit;
   font-size: 13.5px;
-  font-weight: 500;
-  color: var(--tx, #0f172a);
+  font-weight: 600;
+  color: var(--tx, #1e1b4b);
   cursor: pointer;
   text-align: left;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.2s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .g-dd .g-trg:hover,
 .vs-dd .trg:hover,
 .dd .trg:hover {
-  background: #f8fafc;
-  border-color: rgba(15, 23, 42, 0.16);
+  transform: translateY(-1.5px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 14px rgba(90, 70, 160, 0.12);
 }
 
 .g-dd .g-trg:focus-visible,
 .vs-dd .trg:focus-visible,
 .dd .trg:focus-visible {
-  outline: none;
-  border-color: #0f172a;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+  outline: 2px solid #5b7cff;
+  outline-offset: 2px;
 }
 
 .g-dd.open .g-trg,
 .vs-dd.open .trg,
 .dd.open .trg {
-  border-color: #0f172a;
-  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
-  background: #ffffff;
+  border-color: #5b7cff;
+  box-shadow: 0 0 24px rgba(91, 124, 255, 0.3), inset 0 1px 0 #fff;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .g-trg .g-val,
@@ -5505,30 +5505,34 @@ select:focus, .glass-select:focus {
 .vs-dd.open .chev,
 .dd.open .chev {
   transform: rotate(180deg);
-  stroke: #0f172a;
+  stroke: #5b7cff;
 }
 
-/* Glass Panel: frosted white translucency, 1px subtle slate border, no purple gradients */
+/* Glass Panel: 15% opacity, frosted blur, 4px liquid glass scrollbar */
 .g-dd .g-pn,
 .vs-dd .pn,
 .dd .pn {
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   z-index: 1050;
-  padding: 6px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.98);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  padding: 8px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, 0.16)),
+              linear-gradient(180deg, rgba(130, 150, 255, 0.14), rgba(255, 160, 225, 0.10)),
+              rgba(255, 255, 255, var(--dd-po, 0.15));
+  -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(1.06);
+  backdrop-filter: blur(24px) saturate(200%) brightness(1.06);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 20px 46px rgba(60, 40, 130, 0.3), 0 0 0 0.5px rgba(90, 70, 170, 0.18),
+              inset 0 1px 1px rgba(255, 255, 255, 0.95), inset 1px 0 1px rgba(255, 255, 255, 0.55),
+              inset 0 -1px 1px rgba(255, 255, 255, 0.45);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-4px) scale(0.99);
+  transform: translateY(-8px) scale(0.97);
   transform-origin: top;
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s 0.15s;
+  transition: opacity 0.22s, transform 0.35s cubic-bezier(0.34, 1.45, 0.5, 1), visibility 0s 0.35s;
 }
 
 .g-dd.open .g-pn,
@@ -5537,7 +5541,7 @@ select:focus, .glass-select:focus {
   opacity: 1;
   visibility: visible;
   transform: none;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.16s, transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.05);
 }
 
 .g-list,
@@ -5669,29 +5673,30 @@ select:focus, .glass-select:focus {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 10px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
   color: var(--tx, #334155);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background 0.12s, color 0.12s;
+  transition: background 0.2s, color 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.5, 1);
 }
 
 .g-it:hover,
 .g-it.hl,
 .vs-dd .it:hover,
 .vs-dd .it.hl {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.85);
   color: var(--tx, #0f172a);
+  transform: translateX(3px);
 }
 
 .g-it[aria-selected="true"],
 .vs-dd .it[aria-selected="true"] {
-  color: #0f172a;
+  color: #1e3a8a;
   font-weight: 600;
-  background: #f1f5f9;
-  border-color: rgba(15, 23, 42, 0.08);
+  background: linear-gradient(135deg, rgba(91, 124, 255, 0.2), rgba(154, 92, 255, 0.15));
+  border-color: rgba(91, 124, 255, 0.5);
 }
 
 .g-it .g-t,
@@ -5704,7 +5709,7 @@ select:focus, .glass-select:focus {
 .vs-dd .it .t small {
   display: block;
   margin-top: 2px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 400;
   color: var(--tx2, #64748b);
   line-height: 1.3;
@@ -5716,23 +5721,23 @@ select:focus, .glass-select:focus {
   flex: none;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 11.5px;
-  color: #475569;
-  background: #f1f5f9;
-  border: 1px solid var(--line);
-  transition: all 0.15s;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #7c3aed;
+  background: rgba(154, 92, 255, 0.14);
+  border: 1px solid rgba(110, 90, 190, 0.25);
+  transition: all 0.25s;
 }
 
 .g-it[aria-selected="true"] .g-lt,
 .vs-dd .it[aria-selected="true"] .lt {
-  background: #0f172a;
-  color: #ffffff;
-  border-color: #0f172a;
-  box-shadow: none;
+  background: linear-gradient(135deg, #5b7cff, #9a5cff);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 3px 10px rgba(110, 100, 255, 0.4);
 }
 
 /* Category 2 Icon */

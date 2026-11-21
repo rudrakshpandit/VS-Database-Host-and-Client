@@ -69,7 +69,7 @@
     'auto-select-fy': {
       category: 1,
       type: 'basic',
-      tint: '15,23,42',
+      tint: '124,104,214',
       placeholder: 'Select FY...'
     },
 
@@ -180,25 +180,25 @@
     'auto-filter-dir': {
       category: 3,
       type: 'status',
-      tint: '15,23,42',
+      tint: '154,92,255',
       placeholder: 'All Directions',
       dots: {
-        '': '#64748b',
-        'debit': '#b91c1c',
-        'credit': '#15803d'
+        '': '#9a5cff',
+        'debit': '#ff5d86',
+        'credit': '#1fcf93'
       }
     },
     'auto-filter-status': {
       category: 3,
       type: 'status',
-      tint: '15,23,42',
+      tint: '154,92,255',
       showBadges: true,
       placeholder: 'All Statuses',
       dots: {
-        '': '#64748b',
-        'unassigned': '#b45309',
-        'assigned': '#15803d',
-        'ai_assigned': '#0f172a'
+        '': '#9a5cff',
+        'unassigned': '#ffb020',
+        'assigned': '#1fcf93',
+        'ai_assigned': '#8b5cf6'
       }
     },
 
@@ -217,7 +217,7 @@
       category: 5,
       type: 'searchable',
       search: true,
-      tint: '15,23,42',
+      tint: '91,124,255',
       placeholder: 'Select Tally company...',
       searchPlaceholder: 'Search Tally company...'
     },
@@ -225,7 +225,7 @@
       category: 5,
       type: 'searchable',
       search: true,
-      tint: '15,23,42',
+      tint: '91,124,255',
       placeholder: 'Select Bank Account in Tally...',
       searchPlaceholder: 'Search bank ledger...'
     },
@@ -233,7 +233,7 @@
       category: 5,
       type: 'searchable',
       search: true,
-      tint: '15,23,42',
+      tint: '91,124,255',
       placeholder: '-- Choose Tally Master Ledger --',
       searchPlaceholder: 'Search master ledgers...'
     }

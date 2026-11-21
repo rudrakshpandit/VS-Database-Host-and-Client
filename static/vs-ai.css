@@ -18,15 +18,15 @@
   --vsai-font-claude: 'Source Serif 4', 'Charter', 'Lora', 'Georgia', 'Cambria', serif;
 
   /* Frosted Glass Tokens */
-  --vsai-glass-card-bg: var(--card-bg, #ffffff);
-  --vsai-glass-card-border: var(--card-border, #e5e7eb);
-  --vsai-glass-card-shadow: var(--shadow-sm, 0 1px 2px rgba(16,24,40,.04), 0 4px 12px rgba(16,24,40,.06));
-  --vsai-glass-blur: blur(16px);
+  --vsai-glass-card-bg: var(--glass2, rgba(255, 255, 255, 0.8));
+  --vsai-glass-card-border: var(--bd, rgba(255, 255, 255, 0.75));
+  --vsai-glass-card-shadow: var(--sh, 0 10px 40px rgba(49, 46, 129, 0.14));
+  --vsai-glass-blur: blur(20px) saturate(160%);
 
-  /* Primary Neutral Tokens */
-  --vsai-btn-primary-grad: #0f172a;
-  --vsai-user-bubble-grad: #0f172a;
-  --vsai-blue-grad: #0f172a;
+  /* Primary Gradients */
+  --vsai-btn-primary-grad: var(--pri, linear-gradient(135deg, #2563eb, #7c3aed));
+  --vsai-user-bubble-grad: var(--pri, linear-gradient(135deg, #2563eb, #7c3aed));
+  --vsai-blue-grad: var(--pri, linear-gradient(135deg, #2563eb, #7c3aed));
 
   /* Inks & Text Colors */
   --vsai-ink: var(--tx, #0f172a);

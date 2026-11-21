@@ -7,20 +7,20 @@
 
 #studio-root,
 #studio-portal {
-  --bg1: #f8fafc;
-  --bg2: #f1f5f9;
-  --bg3: #f8fafc;
+  --bg1: #ffe0f0;
+  --bg2: #d9ceff;
+  --bg3: #bfe8ff;
   --text: #0f172a;
   --dim: #475569;
-  --glass: var(--card-bg, #ffffff);
-  --row: #f8fafc;
-  --edge: var(--card-border, #e5e7eb);
-  --line: var(--card-border, #e5e7eb);
-  --shadow: var(--shadow-sm, 0 1px 2px rgba(16,24,40,.04), 0 4px 12px rgba(16,24,40,.06));
-  --a1: #0f172a;
-  --a2: #1e293b;
-  --yes: #15803d;
-  --no: #b91c1c;
+  --glass: var(--glass2, rgba(255, 255, 255, 0.72));
+  --row: rgba(255, 255, 255, 0.6);
+  --edge: var(--bd, rgba(255, 255, 255, 0.75));
+  --line: var(--line, rgba(15, 23, 42, 0.1));
+  --shadow: var(--sh, 0 10px 40px rgba(49, 46, 129, 0.14));
+  --a1: #5b7cff;
+  --a2: #9a5cff;
+  --yes: #1fcf93;
+  --no: #ff5d86;
   --tw: 150px;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--text);
@@ -108,9 +108,11 @@
   border-radius: 12px;
   padding: 12px 14px;
   text-align: center;
-  background: #ffffff;
-  border: 1px solid var(--edge);
-  box-shadow: var(--shadow);
+  background: var(--glass2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--bd);
+  box-shadow: var(--sh);
 }
 
 #studio-root .cats {
