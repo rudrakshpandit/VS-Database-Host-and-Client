@@ -509,6 +509,7 @@
     isMaximized: isMaximized,
     closeWindow: closeWindow,
     confirmClose: confirmClose,
+    closeApp: confirmClose,
     startDrag: startDrag,
     openFileDialog: openFileDialog,
     saveFileDialog: saveFileDialog,

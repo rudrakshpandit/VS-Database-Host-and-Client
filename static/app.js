@@ -1,5 +1,5 @@
 
-window.APP_VERSION = '2.2.4.1';
+window.APP_VERSION = '2.3.0';
 
 // ==============================================================================
 // PHASE 16: REAL-TIME SYNC, RBAC, GLASS OTP & SETTINGS LOCK HELPERS
@@ -3023,8 +3023,8 @@ function showUpdateAvailableModal(res) {
   const existing = document.getElementById('vs-update-modal-overlay');
   if (existing) existing.remove();
 
-  const curVer = res.current_version || window.APP_VERSION || '2.2.4.1';
-  const latestVer = res.latest_version || '2.2.4.1';
+  const curVer = res.current_version || window.APP_VERSION || '2.3.0';
+  const latestVer = res.latest_version || '2.3.0';
 
   let notesHtml = '';
   if (res.release_notes && typeof res.release_notes === 'string' && res.release_notes.trim()) {
@@ -3374,7 +3374,7 @@ function showUpdateAvailableModal(res) {
  * @param {boolean} isManual - true if initiated by the user in Settings
  */
 async function checkForAppUpdates(isManual = false) {
-  const curVer = window.APP_VERSION || '2.2.4.1';
+  const curVer = window.APP_VERSION || '2.3.0';
   try {
     const res = await api(`/api/system/check-updates?version=${encodeURIComponent(curVer)}`);
     window.__vsUpdateData = res;
@@ -3745,8 +3745,8 @@ function setup() {
             </label>
             <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
               <span style="font-size:13px;color:#475569;">Release Channel:</span>
-              <span id="system-version-pill" class="badge active" style="font-size:11px;padding:3px 10px;border-radius:8px;">v2.2.4.1 (Production)</span>
-              <span id="system-commit-badge" style="font-size:11.5px;color:#64748b;font-family:monospace;font-weight:600;">[v2.2.4.1]</span>
+              <span id="system-version-pill" class="badge active" style="font-size:11px;padding:3px 10px;border-radius:8px;">v2.3.0 (Production)</span>
+              <span id="system-commit-badge" style="font-size:11.5px;color:#64748b;font-family:monospace;font-weight:600;">[v2.3.0]</span>
             </div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
@@ -3971,7 +3971,7 @@ function setup() {
       updateMsg.style.display = 'block';
       updateMsg.innerHTML = '<span style="color:#64748b;">Connecting to GitHub repository and checking latest release...</span>';
       try {
-        const curVer = window.APP_VERSION || '2.2.4.1';
+        const curVer = window.APP_VERSION || '2.3.0';
         const res = await api(`/api/system/check-updates?version=${encodeURIComponent(curVer)}`);
         window.__vsUpdateData = res;
         if (res.current_version) commitBadge.textContent = `[v${res.current_version}]`;
