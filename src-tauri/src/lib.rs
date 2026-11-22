@@ -446,6 +446,172 @@ fn set_client_mode(enabled: bool) -> Result<bool, String> {
     Ok(enabled)
 }
 
+fn get_autostart_command_string() -> Option<String> {
+    if let Some(sidecar_bin) = locate_sidecar_binary() {
+        return Some(format!("\"{}\" --host-mode --port={}", sidecar_bin.display(), PYTHON_PORT));
+    }
+    if let Some(server_script) = locate_server_script() {
+        if let Some(python_exe) = get_python_executable() {
+            let pythonw_exe = if python_exe.ends_with("python.exe") {
+                let w = python_exe.replace("python.exe", "pythonw.exe");
+                if std::path::Path::new(&w).exists() {
+                    w
+                } else {
+                    python_exe
+                }
+            } else {
+                python_exe
+            };
+            return Some(format!("\"{}\" \"{}\" --host-mode --port={}", pythonw_exe, server_script.display(), PYTHON_PORT));
+        }
+    }
+    None
+}
+
+fn notify_backend_autostart(enabled: bool) {
+    let addr_str = format!("127.0.0.1:{}", PYTHON_PORT);
+    let Ok(addr) = addr_str.parse::<SocketAddr>() else {
+        return;
+    };
+    if let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(500)) {
+        let _ = stream.set_write_timeout(Some(Duration::from_millis(800)));
+        let _ = stream.set_read_timeout(Some(Duration::from_millis(800)));
+        let body = format!("{{\"enabled\": {}}}", enabled);
+        let request = format!(
+            "POST /api/system/autostart HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nX-VS-Handshake-Token: {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+            PYTHON_PORT,
+            get_handshake_token(),
+            body.len(),
+            body
+        );
+        let _ = stream.write_all(request.as_bytes());
+        let mut buf = [0u8; 256];
+        let _ = stream.read(&mut buf);
+    }
+}
+
+#[tauri::command]
+fn is_autostart_enabled() -> Result<bool, String> {
+    #[cfg(windows)]
+    {
+        let mut cmd = Command::new("reg");
+        cmd.args(&[
+            "query",
+            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+            "/v",
+            "VSDatabaseHostServer",
+        ]);
+        cmd.creation_flags(CREATE_NO_WINDOW);
+
+        match cmd.output() {
+            Ok(output) => {
+                if output.status.success() {
+                    let out_str = String::from_utf8_lossy(&output.stdout);
+                    Ok(out_str.contains("VSDatabaseHostServer"))
+                } else {
+                    Ok(false)
+                }
+            }
+            Err(e) => Err(format!("Failed to query registry: {}", e)),
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        Ok(false)
+    }
+}
+
+#[tauri::command]
+fn enable_autostart_server() -> Result<bool, String> {
+    #[cfg(windows)]
+    {
+        let cmd_str = get_autostart_command_string()
+            .ok_or_else(|| "Could not determine host server startup command".to_string())?;
+
+        let mut cmd = Command::new("reg");
+        cmd.args(&[
+            "add",
+            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+            "/v",
+            "VSDatabaseHostServer",
+            "/t",
+            "REG_SZ",
+            "/d",
+            &cmd_str,
+            "/f",
+        ]);
+        cmd.creation_flags(CREATE_NO_WINDOW);
+
+        let status = cmd
+            .status()
+            .map_err(|e| format!("Failed to register autostart in Windows Registry: {}", e))?;
+
+        if !status.success() {
+            return Err("reg.exe returned non-zero exit code while adding autostart".to_string());
+        }
+
+        // Clean up legacy key if present
+        let mut del_legacy = Command::new("reg");
+        del_legacy.args(&[
+            "delete",
+            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+            "/v",
+            "VSDatabaseServer",
+            "/f",
+        ]);
+        del_legacy.creation_flags(CREATE_NO_WINDOW);
+        let _ = del_legacy.status();
+
+        notify_backend_autostart(true);
+        eprintln!("[Autostart] Host Server silent Windows autostart enabled: {}", cmd_str);
+        Ok(true)
+    }
+    #[cfg(not(windows))]
+    {
+        Err("Autostart is only supported on Windows".to_string())
+    }
+}
+
+#[tauri::command]
+fn disable_autostart_server() -> Result<bool, String> {
+    #[cfg(windows)]
+    {
+        let mut cmd = Command::new("reg");
+        cmd.args(&[
+            "delete",
+            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+            "/v",
+            "VSDatabaseHostServer",
+            "/f",
+        ]);
+        cmd.creation_flags(CREATE_NO_WINDOW);
+
+        let status = cmd
+            .status()
+            .map_err(|e| format!("Failed to remove autostart entry: {}", e))?;
+
+        // Also ensure legacy key removed
+        let mut del_legacy = Command::new("reg");
+        del_legacy.args(&[
+            "delete",
+            r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+            "/v",
+            "VSDatabaseServer",
+            "/f",
+        ]);
+        del_legacy.creation_flags(CREATE_NO_WINDOW);
+        let _ = del_legacy.status();
+
+        notify_backend_autostart(false);
+        eprintln!("[Autostart] Host Server silent Windows autostart disabled");
+        Ok(!status.success() || true)
+    }
+    #[cfg(not(windows))]
+    {
+        Err("Autostart is only supported on Windows".to_string())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     detect_client_mode();
@@ -464,7 +630,7 @@ pub fn run() {
     builder = builder.plugin(tauri_plugin_opener::init());
     builder = builder.plugin(tauri_plugin_dialog::init());
 
-    // Window controls, health commands, client mode, and handshake token
+    // Window controls, health commands, client mode, autostart, and handshake token
     builder = builder.invoke_handler(tauri::generate_handler![
         minimize_window,
         maximize_window,
@@ -475,7 +641,10 @@ pub fn run() {
         get_desktop_handshake_token,
         get_app_mode,
         is_client_mode,
-        set_client_mode
+        set_client_mode,
+        enable_autostart_server,
+        disable_autostart_server,
+        is_autostart_enabled
     ]);
 
     // Setup lifecycle: supervisor spawn & health check
@@ -498,11 +667,12 @@ pub fn run() {
     builder = builder.on_window_event(|_window, event| {
         if let tauri::WindowEvent::CloseRequested { .. } = event {
             std::thread::spawn(|| {
-                if can_shutdown_backend() {
-                    eprintln!("[Lifecycle] No active LAN clients or LAN mode. Shutting down backend...");
+                let autostart = is_autostart_enabled().unwrap_or(false);
+                if can_shutdown_backend() && !autostart {
+                    eprintln!("[Lifecycle] No active LAN clients, LAN mode, or autostart. Shutting down backend...");
                     send_desktop_shutdown();
                 } else {
-                    eprintln!("[Lifecycle] Active LAN clients or LAN mode enabled. Detaching UI while preserving server...");
+                    eprintln!("[Lifecycle] Autostart, LAN mode, or LAN clients active. Detaching UI while preserving server...");
                     send_desktop_detach();
                 }
             });
@@ -516,11 +686,12 @@ pub fn run() {
     app.run(|_app_handle, event| {
         if let tauri::RunEvent::ExitRequested { .. } = event {
             std::thread::spawn(|| {
-                if can_shutdown_backend() {
+                let autostart = is_autostart_enabled().unwrap_or(false);
+                if can_shutdown_backend() && !autostart {
                     eprintln!("[Lifecycle] App exit requested, ensuring backend shutdown...");
                     send_desktop_shutdown();
                 } else {
-                    eprintln!("[Lifecycle] App exit with LAN mode, server retained.");
+                    eprintln!("[Lifecycle] App exit with autostart/LAN mode active, server retained.");
                     send_desktop_detach();
                 }
             });

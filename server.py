@@ -90,13 +90,43 @@ SCRATCH_DIR = DATA_ROOT / ".scratch"
 SCRATCH_DIR.mkdir(exist_ok=True)
 
 from staging_manager import StagingSessionManager
-from pdf_studio_engine import PDFStudioEngine
 
 staging_mgr = StagingSessionManager(APP_ROOT, application_id="vs_desktop_app")
-pdf_engine = PDFStudioEngine(APP_ROOT, application_id="vs_desktop_app")
-import vs_ai_engine
-import vs_ai_doc_generator
-import vs_ai_rename
+
+class _LazyPDFStudioEngineProxy:
+    def __init__(self):
+        self._inst = None
+        self._lock = threading.Lock()
+    def _get(self):
+        if self._inst is None:
+            with self._lock:
+                if self._inst is None:
+                    from pdf_studio_engine import PDFStudioEngine
+                    self._inst = PDFStudioEngine(APP_ROOT, application_id="vs_desktop_app")
+        return self._inst
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+pdf_engine = _LazyPDFStudioEngineProxy()
+
+class _LazyModuleProxy:
+    def __init__(self, mod_name):
+        self._mod_name = mod_name
+        self._mod = None
+        self._lock = threading.Lock()
+    def _get(self):
+        if self._mod is None:
+            with self._lock:
+                if self._mod is None:
+                    import importlib
+                    self._mod = importlib.import_module(self._mod_name)
+        return self._mod
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+vs_ai_engine = _LazyModuleProxy("vs_ai_engine")
+vs_ai_doc_generator = _LazyModuleProxy("vs_ai_doc_generator")
+vs_ai_rename = _LazyModuleProxy("vs_ai_rename")
 
 class SafeStream:
     def __init__(self, log_path):
@@ -1536,7 +1566,7 @@ def settings_payload(con=None):
         "last_backup_time": get_setting("last_backup_time", "", con=con),
         "last_backup_status": get_setting("last_backup_status", "Never", con=con),
         "app_autostart": get_setting("app_autostart", "0", con=con) == "1",
-        "server_autostart": True,
+        "server_autostart": is_server_autostart_enabled(),
     }
 
 
@@ -5291,11 +5321,43 @@ start "" "{inst_path}"
 # ==============================================================================
 # WINDOWS AUTOSTART & BACKGROUND SYSTEM SERVICE MANAGER
 # ==============================================================================
+def get_host_server_autostart_cmd():
+    """Returns the exact command to start the authoritative host server silently in background."""
+    app_root = Path(__file__).resolve().parent
+    sidecar_path = app_root / "server_sidecar.exe"
+    if not sidecar_path.is_file():
+        dist_sidecar = app_root / "dist" / "server_sidecar.exe"
+        if dist_sidecar.is_file():
+            sidecar_path = dist_sidecar
+
+    if sidecar_path.is_file():
+        return f'"{sidecar_path}" --host-mode --port=8768'
+
+    # Fallback to pythonw.exe
+    python_dir = Path(sys.executable).parent
+    pythonw_candidates = [
+        python_dir / "pythonw.exe",
+        Path(r"C:\Python314\pythonw.exe"),
+        Path(r"C:\Python313\pythonw.exe"),
+        Path(r"C:\Python312\pythonw.exe"),
+        Path(r"C:\Python311\pythonw.exe"),
+        Path(r"C:\Python310\pythonw.exe"),
+        Path("pythonw.exe")
+    ]
+    pythonw_path = "pythonw.exe"
+    for cand in pythonw_candidates:
+        if cand.is_file():
+            pythonw_path = str(cand)
+            break
+
+    server_py_path = app_root / "server.py"
+    return f'"{pythonw_path}" "{server_py_path}" --host-mode --port=8768'
+
+
 def get_windows_autostart_paths():
     """Returns resolved paths for Server background launch and Desktop App launch."""
     app_dir = Path(__file__).resolve().parent
-    vbs_path = app_dir / "launch_background.vbs"
-    server_cmd = f'wscript.exe "{vbs_path}"'
+    server_cmd = get_host_server_autostart_cmd()
 
     exe_path = app_dir / "VS_Database.exe"
     if exe_path.is_file():
@@ -5313,16 +5375,86 @@ def get_windows_autostart_paths():
     }
 
 
-def ensure_server_autostart_registered():
-    """Guarantees VSDatabaseServer is registered in HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run."""
+def is_server_autostart_enabled():
+    r"""Checks Windows Registry HKCU\Software\Microsoft\Windows\CurrentVersion\Run for VSDatabaseHostServer."""
     if sys.platform != "win32":
         return False
     try:
         import winreg
-        paths = get_windows_autostart_paths()
+        run_key = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, run_key, 0, winreg.KEY_READ) as key:
+            try:
+                val, _ = winreg.QueryValueEx(key, "VSDatabaseHostServer")
+                if val and str(val).strip():
+                    return True
+            except OSError:
+                pass
+            try:
+                val_legacy, _ = winreg.QueryValueEx(key, "VSDatabaseServer")
+                if val_legacy and str(val_legacy).strip():
+                    return True
+            except OSError:
+                pass
+    except Exception:
+        pass
+    return False
+
+
+def set_server_autostart(enabled: bool):
+    """Enables or disables Host Server Windows Registry autostart entry."""
+    if sys.platform != "win32":
+        return {"ok": False, "error": "Autostart is only supported on Windows", "enabled": False}
+    target_cmd = get_host_server_autostart_cmd()
+    try:
+        import winreg
+        run_key = r"Software\Microsoft\Windows\CurrentVersion\Run"
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, run_key, 0, winreg.KEY_ALL_ACCESS) as key:
+            if enabled:
+                winreg.SetValueEx(key, "VSDatabaseHostServer", 0, winreg.REG_SZ, target_cmd)
+            else:
+                try:
+                    winreg.DeleteValue(key, "VSDatabaseHostServer")
+                except OSError:
+                    pass
+            # Always clean up legacy key
+            try:
+                winreg.DeleteValue(key, "VSDatabaseServer")
+            except OSError:
+                pass
+        with db() as con:
+            con.execute("INSERT INTO settings(key,value) VALUES('server_autostart', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                        ("1" if enabled else "0",))
+        return {
+            "ok": True,
+            "enabled": enabled,
+            "server_autostart": enabled,
+            "mode": "host",
+            "path": target_cmd if enabled else "",
+            "message": "Host Server silent auto-start enabled." if enabled else "Host Server auto-start disabled."
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc), "enabled": is_server_autostart_enabled()}
+
+
+def ensure_server_autostart_registered():
+    r"""Guarantees VSDatabaseHostServer is registered in HKCU\Software\Microsoft\Windows\CurrentVersion\Run if not explicitly disabled."""
+    if sys.platform != "win32":
+        return False
+    try:
+        setting_val = get_setting("server_autostart", None)
+        if setting_val == "0":
+            return False
+
+        import winreg
+        target_cmd = get_host_server_autostart_cmd()
         run_key = r"Software\Microsoft\Windows\CurrentVersion\Run"
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, run_key, 0, winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "VSDatabaseServer", 0, winreg.REG_SZ, paths["server_cmd"])
+            winreg.SetValueEx(key, "VSDatabaseHostServer", 0, winreg.REG_SZ, target_cmd)
+            try:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, run_key, 0, winreg.KEY_ALL_ACCESS) as write_key:
+                    winreg.DeleteValue(write_key, "VSDatabaseServer")
+            except OSError:
+                pass
         return True
     except Exception as exc:
         print(f"[Autostart] Notice ensuring server autostart: {exc}", flush=True)
@@ -5331,19 +5463,14 @@ def ensure_server_autostart_registered():
 
 def get_autostart_status():
     """Checks the Windows Registry to determine current autostart status of Server and App."""
-    server_active = False
+    enabled = is_server_autostart_enabled()
+    target_cmd = get_host_server_autostart_cmd()
     app_active = False
-    paths = get_windows_autostart_paths()
     if sys.platform == "win32":
         try:
             import winreg
             run_key = r"Software\Microsoft\Windows\CurrentVersion\Run"
             with winreg.OpenKey(winreg.HKEY_CURRENT_USER, run_key, 0, winreg.KEY_READ) as key:
-                try:
-                    val, _ = winreg.QueryValueEx(key, "VSDatabaseServer")
-                    server_active = bool(val and "launch_background.vbs" in val)
-                except OSError:
-                    server_active = False
                 try:
                     val, _ = winreg.QueryValueEx(key, "VSDatabaseApp")
                     app_active = bool(val)
@@ -5351,14 +5478,14 @@ def get_autostart_status():
                     app_active = False
         except Exception:
             pass
-    # If server autostart was missing or pointed to obsolete path, register it now
-    if not server_active:
-        server_active = ensure_server_autostart_registered()
+
     return {
         "ok": True,
-        "server_autostart": True,
-        "app_autostart": app_active,
-        "paths": paths
+        "enabled": enabled,
+        "mode": "host",
+        "path": target_cmd if enabled else "",
+        "server_autostart": enabled,
+        "app_autostart": app_active
     }
 
 
@@ -7528,6 +7655,8 @@ class Handler(BaseHTTPRequestHandler):
             "/api/desktop/health",
             "/api/desktop/state",
             "/api/desktop/heartbeat",
+            "/api/client/connection-state",
+            "/api/client/autostart",
             "/api/host/status",
             "/api/host/pairing/claim-pin",
             "/api/sync/version",
@@ -7549,6 +7678,8 @@ class Handler(BaseHTTPRequestHandler):
             "/api/system/start-update-download",
             "/api/system/update-progress",
             "/api/system/execute-update-restart",
+            "/api/system/autostart",
+            "/api/desktop/lifecycle-policy",
             "/api/system/browse-folder",
             "/api/clients/sample-template",
             "/api/google/callback",
@@ -8341,6 +8472,30 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/desktop/health":
             return self.send_json(get_desktop_health())
 
+        if path == "/api/client/connection-state":
+            appdata = os.environ.get("APPDATA") or os.path.expanduser("~\\AppData\\Roaming")
+            state_p = Path(appdata) / "VS Database" / "client_connection_state.json"
+            if state_p.is_file():
+                try:
+                    with open(state_p, "r", encoding="utf-8") as f:
+                        return self.send_json(json.load(f))
+                except Exception:
+                    pass
+            return self.send_json({"connected": False, "status": "offline"})
+
+        if path == "/api/client/autostart":
+            is_active = False
+            cmd_str = ""
+            if sys.platform == "win32":
+                try:
+                    import winreg
+                    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_READ) as key:
+                        cmd_str, _ = winreg.QueryValueEx(key, "VSDatabaseClientAgent")
+                        is_active = bool(cmd_str)
+                except Exception:
+                    pass
+            return self.send_json({"ok": True, "autostart": is_active, "cmd": cmd_str})
+
         if path == "/api/host/status":
             with db() as con:
                 active_s = con.execute("SELECT COUNT(*) FROM sessions WHERE status = 'active'").fetchone()[0]
@@ -8398,12 +8553,29 @@ class Handler(BaseHTTPRequestHandler):
                     "SELECT value FROM settings WHERE key = 'lan_server_mode' LIMIT 1"
                 ).fetchone()
                 lan_enabled = bool(lan_setting and lan_setting[0] in ("true", "1", "enabled"))
-            can_terminate = not lan_enabled and active_lan_sessions == 0
+
+            autostart_active = is_server_autostart_enabled()
+
+            if autostart_active:
+                can_terminate = False
+                reason = "autostart_enabled"
+            elif lan_enabled:
+                can_terminate = False
+                reason = "lan_server_mode_enabled"
+            elif active_lan_sessions > 0:
+                can_terminate = False
+                reason = "active_lan_sessions"
+            else:
+                can_terminate = True
+                reason = "no_blocking_policy"
+
             return self.send_json({
                 "ok": True,
                 "lan_server_mode": lan_enabled,
+                "autostart_enabled": autostart_active,
                 "active_lan_sessions": active_lan_sessions,
-                "can_terminate": can_terminate
+                "can_terminate": can_terminate,
+                "reason": reason
             })
 
         if path == "/api/desktop/navigate":
@@ -9940,8 +10112,42 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send_json({"ok": False, "error": str(exc)}, 400)
 
             if path == "/api/system/autostart":
-                app_autostart = bool(payload.get("app_autostart", False))
-                return self.send_json(set_app_autostart(app_autostart))
+                if "enabled" in payload:
+                    enabled = bool(payload.get("enabled", False))
+                    return self.send_json(set_server_autostart(enabled))
+                elif "server_autostart" in payload:
+                    enabled = bool(payload.get("server_autostart", False))
+                    return self.send_json(set_server_autostart(enabled))
+                elif "app_autostart" in payload:
+                    app_autostart = bool(payload.get("app_autostart", False))
+                    return self.send_json(set_app_autostart(app_autostart))
+                else:
+                    enabled = bool(payload.get("enabled", False))
+                    return self.send_json(set_server_autostart(enabled))
+
+            if path == "/api/client/autostart":
+                enabled = bool(payload.get("autostart", payload.get("enabled", False)))
+                if sys.platform != "win32":
+                    return self.send_json({"ok": False, "error": "Windows only"})
+                try:
+                    import winreg
+                    app_dir = Path(__file__).resolve().parent
+                    daemon_p = app_dir / "client_daemon.pyw"
+                    pyw = Path(sys.executable).parent / "pythonw.exe"
+                    if not pyw.is_file():
+                        pyw = Path("pythonw.exe")
+                    cmd = f'"{pyw}" "{daemon_p}"'
+                    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE) as key:
+                        if enabled:
+                            winreg.SetValueEx(key, "VSDatabaseClientAgent", 0, winreg.REG_SZ, cmd)
+                        else:
+                            try:
+                                winreg.DeleteValue(key, "VSDatabaseClientAgent")
+                            except OSError:
+                                pass
+                    return self.send_json({"ok": True, "autostart": enabled})
+                except Exception as exc:
+                    return self.send_json({"ok": False, "error": str(exc)}, 500)
 
             if path == "/api/system/browse-folder":
                 initial = str(payload.get("current") or "").strip()

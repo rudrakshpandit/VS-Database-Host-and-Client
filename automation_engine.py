@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from statement_parser import BankStatementParser
 from tally_mcp_client import TallyMCPClient
-import vs_ai_engine
+# vs_ai_engine is imported lazily in methods that require AI to preserve ultra-low RAM footprint
 
 logger = logging.getLogger("vs_database.automation_engine")
 
@@ -616,6 +616,7 @@ class AutomationEngine:
 
         gemini_count = 0
         if unassigned and ledger_names:
+            import vs_ai_engine
             ai_eng = vs_ai_engine.get_ai_engine(self.db_path)
             gemini = ai_eng.gemini
             api_key = gemini.get_api_key()
@@ -1412,6 +1413,7 @@ Respond ONLY with a valid JSON array in this exact structure:
         retrieved_data = tally_res.get("data")
 
         # Step 3: Pass retrieved data to Gemini for grounded interpretation
+        import vs_ai_engine
         ai_eng = vs_ai_engine.get_ai_engine(self.db_path)
         gemini = ai_eng.gemini
         api_key = gemini.get_api_key()
