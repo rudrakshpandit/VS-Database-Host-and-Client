@@ -3,7 +3,6 @@ use std::net::{SocketAddr, TcpStream};
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::{Duration, Instant};
-use tauri::Manager;
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
@@ -14,7 +13,34 @@ const CREATE_NO_WINDOW: u32 = 0x08000000;
 const PYTHON_PORT: u16 = 8768;
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
+use tauri::{Emitter, Manager};
+
+static LAUNCH_PDF_PATH: Mutex<Option<String>> = Mutex::new(None);
+
+pub fn set_launch_pdf_path(path: String) {
+    if let Ok(mut lock) = LAUNCH_PDF_PATH.lock() {
+        *lock = Some(path);
+    }
+}
+
+pub fn get_launch_pdf() -> Option<String> {
+    LAUNCH_PDF_PATH.lock().ok().and_then(|guard| guard.clone())
+}
+
+pub fn detect_launch_pdf_from_args() {
+    for arg in std::env::args().skip(1) {
+        let clean = arg.trim_matches('"').trim_matches('\'').trim().to_string();
+        if clean.to_lowercase().ends_with(".pdf") {
+            let path = PathBuf::from(&clean);
+            if path.is_file() {
+                eprintln!("[Launch] PDF document detected on startup: {}", clean);
+                set_launch_pdf_path(clean);
+                break;
+            }
+        }
+    }
+}
 
 static CLIENT_MODE: AtomicBool = AtomicBool::new(false);
 
@@ -426,6 +452,11 @@ fn get_python_health() -> bool {
 }
 
 #[tauri::command]
+fn get_launch_pdf_path() -> Option<String> {
+    get_launch_pdf()
+}
+
+#[tauri::command]
 fn get_app_mode() -> String {
     if is_client_mode_active() {
         "client".to_string()
@@ -615,10 +646,36 @@ fn disable_autostart_server() -> Result<bool, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     detect_client_mode();
+    detect_launch_pdf_from_args();
     let mut builder = tauri::Builder::default();
 
-    // Single-instance plugin
-    builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+    // Single-instance plugin with PDF argument forwarding
+    builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        let mut found_pdf: Option<String> = None;
+        for arg in args.into_iter().skip(1) {
+            let clean = arg.trim_matches('"').trim_matches('\'').trim().to_string();
+            if clean.to_lowercase().ends_with(".pdf") {
+                let path = PathBuf::from(&clean);
+                if path.is_file() {
+                    found_pdf = Some(clean);
+                    break;
+                }
+            }
+        }
+
+        if let Some(pdf) = found_pdf {
+            eprintln!("[SingleInstance] PDF opened via secondary instance: {}", pdf);
+            set_launch_pdf_path(pdf.clone());
+            let _ = app.emit("open-pdf-file", &pdf);
+            if let Some(window) = app.get_webview_window("main") {
+                let js = format!(
+                    "if (typeof window.openPdfFilePathInStudio === 'function') {{ window.openPdfFilePathInStudio({:?}); }} else if (typeof window.TauriBridge !== 'undefined' && typeof window.TauriBridge.handlePdfLaunch === 'function') {{ window.TauriBridge.handlePdfLaunch({:?}); }}",
+                    pdf, pdf
+                );
+                let _ = window.eval(&js);
+            }
+        }
+
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.show();
             let _ = window.unminimize();
@@ -630,7 +687,7 @@ pub fn run() {
     builder = builder.plugin(tauri_plugin_opener::init());
     builder = builder.plugin(tauri_plugin_dialog::init());
 
-    // Window controls, health commands, client mode, autostart, and handshake token
+    // Window controls, health commands, client mode, autostart, launch PDF, and handshake token
     builder = builder.invoke_handler(tauri::generate_handler![
         minimize_window,
         maximize_window,
@@ -638,6 +695,7 @@ pub fn run() {
         is_maximized,
         start_drag,
         get_python_health,
+        get_launch_pdf_path,
         get_desktop_handshake_token,
         get_app_mode,
         is_client_mode,
@@ -654,6 +712,12 @@ pub fn run() {
             let _ = window.show();
             let _ = window.unminimize();
             let _ = window.set_focus();
+
+            if let Some(ref pdf) = get_launch_pdf() {
+                let js = format!("window.__VS_LAUNCH_PDF__ = {:?};", pdf);
+                let _ = window.eval(&js);
+                let _ = app.emit("open-pdf-file", pdf);
+            }
         }
         std::thread::spawn(|| {
             if let Err(e) = ensure_python_sidecar() {
